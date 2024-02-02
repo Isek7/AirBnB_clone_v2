@@ -91,8 +91,8 @@ server {
     try_files \$uri \$uri/ =404;
   }
 
-  if (\$request_filename ~ redirect_me){
-    rewrite ^ https://github.com/Isek7/;
+  if ($request_filename ~ redirect_me){
+    rewrite ^ https://github.com/Isek7 permanent;
   }
 
   location = /404.html {
