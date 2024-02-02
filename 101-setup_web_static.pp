@@ -39,15 +39,15 @@ exec { 'make-static-files-folder':
 }
 
 file { '/data/web_static/releases/test/index.html':
-  content =>
-"<!DOCTYPE html>
+  content => "
+<!DOCTYPE html>
 <html lang='en-US'>
-	<head>
-		<title>Home - AirBnB Clone</title>
-	</head>
-	<body>
-		<h1>Welcome to AirBnB!</h1>
-	<body>
+  <head>
+    <title>Home - AirBnB Clone</title>
+  </head>
+  <body>
+    <h1>Welcome to AirBnB!</h1>
+  </body>
 </html>
 ",
   replace => true,
@@ -56,7 +56,7 @@ file { '/data/web_static/releases/test/index.html':
 
 exec { 'link-static-files':
   command => 'ln -sf /data/web_static/releases/test/ /data/web_static/current',
-  path    => '/usr/bin/:/usr/local/bin/:/bin/ ',
+  path    => '/usr/bin/:/usr/local/bin/:/bin/',
   require => [
     Exec['remove-current'],
     File['/data/web_static/releases/test/index.html'],
@@ -65,48 +65,53 @@ exec { 'link-static-files':
 
 exec { 'change-data-owner':
   command => 'chown -hR ubuntu:ubuntu /data',
-  path    => '/usr/bin/:/usr/local/bin/:/bin/ ',
+  path    => '/usr/bin/:/usr/local/bin/:/bin/',
   require => Exec['link-static-files'],
 }
 
 file { '/etc/nginx/sites-available/default':
   ensure  => present,
   mode    => '0644',
-  content =>
-"server {
-	listen 80 default_server;
-	listen [::]:80 default_server;
-	server_name _;
-	index index.html index.htm;
-	error_page 404 /404.html;
-	add_header X-Served-By \$hostname;
-	location / {
-		root /var/www/html/;
-		try_files \$uri \$uri/ =404;
-	}
-	location /hbnb_static/ {
-		alias /data/web_static/current/;
-		try_files \$uri \$uri/ =404;
-	}
-	if (\$request_filename ~ redirect_me){
-		rewrite ^ https://github.com/Isek7/;
-	}
-	location = /404.html {
-		root /var/www/error/;
-		internal;
-	}
-}",
+  content => "
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server;
+  server_name _;
+  index index.html index.htm;
+  error_page 404 /404.html;
+  add_header X-Served-By \$hostname;
+
+  location / {
+    root /var/www/html/;
+    try_files \$uri \$uri/ =404;
+  }
+
+  location /hbnb_static/ {
+    alias /data/web_static/current/;
+    try_files \$uri \$uri/ =404;
+  }
+
+  if (\$request_filename ~ redirect_me){
+    rewrite ^ https://github.com/Isek7/;
+  }
+
+  location = /404.html {
+    root /var/www/error/;
+    internal;
+  }
+}
+",
   require => [
     Package['nginx'],
     File['/var/www/html/index.html'],
     File['/var/www/error/404.html'],
-    Exec['change-data-owner']
+    Exec['change-data-owner'],
   ],
 }
 
 exec { 'enable-site':
   command => "ln -sf '/etc/nginx/sites-available/default' '/etc/nginx/sites-enabled/default'",
-  path    => '/usr/bin/:/usr/local/bin/:/bin/ ',
+  path    => '/usr/bin/:/usr/local/bin/:/bin/',
   require => File['/etc/nginx/sites-available/default'],
 }
 
